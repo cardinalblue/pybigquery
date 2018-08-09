@@ -3,6 +3,7 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
+import google.auth
 from google.cloud.bigquery import dbapi
 from google.cloud import bigquery
 from google.api_core.exceptions import NotFound
@@ -100,10 +101,11 @@ class BigQueryDialect(DefaultDialect):
     supports_simple_order_by_label = True
     postfetch_lastrowid = False
 
-    def __init__(self, arraysize=5000, credentials_path=None, *args, **kwargs):
+    def __init__(self, arraysize=5000, credentials_path=None, scopes=None, *args, **kwargs):
         super(BigQueryDialect, self).__init__(*args, **kwargs)
         self.arraysize = arraysize
         self.credentials_path = credentials_path
+        self.scopes = scopes
 
     @classmethod
     def dbapi(cls):
@@ -111,7 +113,10 @@ class BigQueryDialect(DefaultDialect):
 
     def create_connect_args(self, url):
         if self.credentials_path:
-            client = bigquery.Client.from_service_account_json(self.credentials_path)
+            client = bigquery.Client.from_service_account_json(self.credentials_path, scopes=self.scopes)
+        elif self.scopes:
+            credentials, _ = google.auth.default(scopes=self.scopes)
+            client = client.bigquery.Client(credentials=credentials)
         else:
             client = bigquery.Client(url.host)
         return ([client], {})
