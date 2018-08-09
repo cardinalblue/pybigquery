@@ -116,7 +116,7 @@ class BigQueryDialect(DefaultDialect):
             client = bigquery.Client.from_service_account_json(self.credentials_path, scopes=self.scopes)
         elif self.scopes:
             credentials, _ = google.auth.default(scopes=self.scopes)
-            client = client.bigquery.Client(credentials=credentials)
+            client = bigquery.Client(credentials=credentials)
         else:
             client = bigquery.Client(url.host)
         return ([client], {})
